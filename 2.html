@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Research | Tamim Ibne Shahidullah</title>
+    <style>
+        .copyright {
+            text-align: center;
+            font-size: 13px;
+            color: #71717a; 
+            margin-top: 20px;
+            margin-bottom: 30px;
+            letter-spacing: 0.5px;
+        }
+        /* --- GLOBAL THEME --- */
+        body {
+            background: linear-gradient(to right, #f8f5f0 0%, #f1e9db 50%, #f8f5f0 100%);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: #111111;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; min-height: 70vh; }
+        
+        h1, h2, h3 { font-family: "Georgia", "Times New Roman", serif; color: #111111; letter-spacing: -0.5px; }
+        h1 { font-size: 32px; margin-top: 60px; margin-bottom: 30px; text-align: center; line-height: 1.3;}
+        h2 { font-size: 22px; margin-top: 50px; margin-bottom: 15px; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 10px; }
+        h3 { font-size: 18px; margin-top: 30px; margin-bottom: 10px; }
+        p, li { font-size: 17px; line-height: 1.7; color: #2c2c2c; margin-bottom: 20px; }
+
+        /* --- THE DOCK (TOP & BOTTOM) --- */
+        .dock {
+            width: calc(100% - 40px);
+            max-width: 850px;
+            border-radius: 12px; 
+            padding: 12px 15px; 
+            display: flex;
+            align-items: center; 
+            justify-content: space-between;
+            box-sizing: border-box;
+            background: #1a1a1a; 
+            border: 1px solid #333;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            margin: 30px auto;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .dock-nav { display: flex; gap: 8px; }
+        .dock-nav a { 
+            text-decoration: none; font-weight: 600; text-transform: uppercase; font-size: 13px; 
+            padding: 8px 18px; border-radius: 20px; color: #f1e9db; 
+            background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .dock-contacts { display: flex; gap: 10px; flex-wrap: wrap; }
+        .contact-btn {
+            padding: 10px 16px; border-radius: 6px; text-decoration: none; 
+            font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px;
+            background: #2c2c2c; border: 1px solid #444; color: #fff;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        
+        .icon { width: 18px; height: 18px; stroke: #eaddc4; flex-shrink: 0; transition: all 0.3s ease; }
+
+        .dock-nav a:hover, .contact-btn:hover {
+            background: #f1e9db; color: #b8860b; border-color: #b8860b;
+            transform: translateY(-2px); box-shadow: 0 4px 10px rgba(184, 134, 11, 0.15);
+        }
+        .contact-btn:hover .icon { stroke: #b8860b; }
+
+        /* --- CODE BLOCK THEME --- */
+        pre {
+            background: radial-gradient(circle at center, #ffffff 0%, #f6f0e4 100%);
+            border-left: 4px solid #b8860b; 
+            padding: 25px; border-radius: 0 8px 8px 0;
+            font-family: "Fira Code", "Consolas", monospace; font-size: 14px;
+            line-height: 1.6; margin: 25px 0; overflow-x: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+        }
+        code { font-family: "Fira Code", "Consolas", monospace; }
+
+        /* --- IN-TEXT SCREENSHOTS --- */
+        .writeup-image {
+            position: relative; margin: 30px 0; border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 6px; overflow: hidden; cursor: zoom-in; background: #fff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+        }
+        .writeup-image img { width: 100%; height: auto; display: block; }
+        .screenshot-overlay {
+            position: absolute; inset: 0; background: rgba(26, 26, 26, 0.75); display: flex;
+            align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s ease;
+        }
+        .writeup-image:hover .screenshot-overlay { opacity: 1; }
+        .overlay-text { color: white; font-weight: bold; font-size: 18px; }
+
+        /* --- LIGHTBOX MODAL --- */
+        #lightbox {
+            position: fixed; inset: 0; background: rgba(17, 17, 17, 0.95); z-index: 1000;
+            display: none; align-items: center; justify-content: center; padding: 20px; cursor: zoom-out;
+        }
+        #lightbox img { max-width: 100%; max-height: 95vh; object-fit: contain; border-radius: 4px; box-shadow: 0 0 30px rgba(0,0,0,0.5); }
+        .close-hint { position: absolute; top: 20px; right: 30px; color: white; font-size: 30px; font-weight: bold; }
+
+        @media (max-width: 800px) {
+            .dock { justify-content: center; }
+            .dock-contacts { justify-content: center; width: 100%; }
+            .contact-btn { width: 100%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TOP DOCK -->
+    <div class="dock">
+        <div class="dock-nav">
+            <a href="index.html#me">Me</a>
+            <a href="index.html#impact">Impact</a>
+            <a href="index.html#research">Research</a>
+        </div>
+        <div class="dock-contacts">
+            <a href="mailto:tamimping@gmail.com" class="contact-btn">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>
+                tamimping@gmail.com
+            </a>
+            <a href="https://linkedin.com/in/tamimping" target="_blank" class="contact-btn">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect width="4" height="12" x="2" y="9"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+                linkedin.com/in/tamimping
+            </a>
+        </div>
+    </div>
+
+    <!-- CONTENT CONTAINER -->
+    <div class="container">
+        
+        <!-- ================= WRITE-UP 2 ================= -->
+        <h1>2. RBAC Bypass: Leaking Restricted Data via Event Logs</h1>
+        
+        <h2>The Target</h2>
+        <p>During an engagement on a project management app, I focused heavily on how permissions were handled when data changed states. The app organizes tasks inside workspaces.</p>
+        <p>I created a task in a public workspace, dropped some comments on it, and then migrated that task to a private, restricted workspace.</p>
+        <p>As expected, the app locked my low-privileged account out. Loading the task directly threw a standard 403 Forbidden. The core Role-Based Access Control (RBAC) seemed solid. But I always look at the secondary features.</p>
+
+        <h2>The Bypass</h2>
+        <p>The application separated the task's comment history into an asynchronous Event Log. Crucially, this log was tied to the original public workspace, not the task itself.</p>
+        <p>When the task was migrated, the backend forgot to migrate the event log or update its permission requirements. So, I went back to the original public workspace and queried its event API, filtering specifically for the ID of the restricted task.</p>
+        <p>The API bypassed the RBAC entirely and handed over the full, unredacted comment history of the restricted task—even though I had zero access to the task itself.</p>
+
+        <h2>The Request</h2>
+        <p>I moved to the event log of the original public workspace (101) and searched for the restricted task ID (789).</p>
+
+<pre><code>GET /api/v2/workspaces/101/event-log?entity_id=789 HTTP/1.1
+Host: api.target-platform.com
+Cookie: session_id=attacker_low_priv_session</code></pre>
+
+        <p>Server Response:</p>
+
+<pre><code>HTTP/1.1 200 OK
+
+{
+  "events": [
+    {
+      "event_type": "comment_added",
+      "task_id": "789",
+      "data": {
+        "comment_text": "Highly sensitive internal data here..."
+      }
+    }
+  ]
+}</code></pre>
+
+        <h2>Why It Matters</h2>
+        <p>Organizations rely on private workspaces to isolate sensitive financials or HR records. This flaw silently leaked that protected data in the background. A compromised low-privilege account could use this to quietly monitor confidential discussions without ever triggering an access alert.</p>
+
+        <h2>The Resolution</h2>
+        <p>The company confirmed the issue and deployed a fix. They acknowledged the impact and paid the bounty reward.</p>
+
+        <div class="writeup-image" onclick="openLightbox(this)">
+            <img src="2.1.png" alt="Company Acknowledgement">
+            <div class="screenshot-overlay"><div class="overlay-text">🔍 Click to expand</div></div>
+        </div>
+
+        <div class="writeup-image" onclick="openLightbox(this)">
+            <img src="2.2.png" alt="Bounty Reward">
+            <div class="screenshot-overlay"><div class="overlay-text">🔍 Click to expand</div></div>
+        </div>
+
+    </div>
+
+    <!-- BOTTOM DOCK -->
+    <div class="dock">
+        <div class="dock-nav">
+            <a href="index.html#me">Me</a>
+            <a href="index.html#impact">Impact</a>
+            <a href="index.html#research">Research</a>
+        </div>
+        <div class="dock-contacts">
+            <a href="mailto:tamimping@gmail.com" class="contact-btn">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>
+                tamimping@gmail.com
+            </a>
+            <a href="https://linkedin.com/in/tamimping" target="_blank" class="contact-btn">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect width="4" height="12" x="2" y="9"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+                linkedin.com/in/tamimping
+            </a>
+        </div>
+    </div>
+
+    <div class="copyright">
+    &copy; <span id="current-year"></span> Tamim Ibne Shahidullah. All rights reserved.
+    </div>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+
+    <!-- LIGHTBOX SCRIPT -->
+    <div id="lightbox" onclick="closeLightbox()">
+        <div class="close-hint">&times;</div>
+        <img id="lightbox-img" src="" alt="Full Screen Image">
+    </div>
+    <script>
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightbox-img');
+        function openLightbox(element) {
+            lightboxImg.src = element.querySelector('img').src;
+            lightbox.style.display = 'flex';
+        }
+        function closeLightbox() {
+            lightbox.style.display = 'none';
+            lightboxImg.src = ''; 
+        }
+        document.addEventListener('keydown', e => { if(e.key === "Escape") closeLightbox(); });
+    </script>
+</body>
+</html>
